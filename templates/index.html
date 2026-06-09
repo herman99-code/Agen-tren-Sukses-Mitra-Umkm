@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solusi Mitra UMKM - Konsultan Bisnis F&B UMKM Indonesia</title>
+    
+    <!-- Meta SEO -->
+    <meta name="description" content="Temukan tren kuliner makanan dan minuman terbaru di Indonesia berdasarkan data real-time Google Trends. Dapatkan analisis mendalam dan rekomendasi taktis untuk UMKM Kuliner.">
+    <meta name="author" content="Solusi Mitra UMKM">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Background elements for visual rich experience -->
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    
+    <!-- Navigation -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <img src="/static/logo.jpg" alt="Solusi Mitra UMKM Logo" class="logo-img">
+                <div class="logo-text">
+                    <h1>Solusi <span>Mitra UMKM</span></h1>
+                    <p>Solusi Tepat, Usaha Berkembang</p>
+                </div>
+            </div>
+            <div class="badge-status">
+                <span class="pulse-dot"></span>
+                <span id="data-source-badge">Terhubung ke API Google Trends</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        
+        <!-- Search & Control Panel -->
+        <section class="control-panel card animate-fade-in">
+            <form id="analyze-form" class="search-form">
+                <div class="input-group">
+                    <label for="keyword-input">
+                        <i data-lucide="search"></i> Kata Kunci Kuliner
+                    </label>
+                    <input type="text" id="keyword-input" placeholder="Contoh: seblak, croissant, es kopi susu..." value="seblak" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="geo-select">
+                        <i data-lucide="map-pin"></i> Wilayah (Provinsi)
+                    </label>
+                    <select id="geo-select">
+                        <option value="ID">Semua Indonesia</option>
+                        <option value="JB">Jawa Barat</option>
+                        <option value="JT">Jawa Tengah</option>
+                        <option value="JI">Jawa Timur</option>
+                        <option value="JK">DKI Jakarta</option>
+                        <option value="YO">DI Yogyakarta</option>
+                        <option value="BT">Banten</option>
+                        <option value="BB">Bangka Belitung</option>
+                        <option value="LA">Lampung</option>
+                        <option value="SS">Sumatera Selatan</option>
+                        <option value="SU">Sumatera Utara</option>
+                        <option value="SB">Sumatera Barat</option>
+                        <option value="BA">Bali</option>
+                        <option value="SN">Sulawesi Selatan</option>
+                        <option value="KB">Kalimantan Barat</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="timeframe-select">
+                        <i data-lucide="calendar"></i> Rentang Waktu
+                    </label>
+                    <select id="timeframe-select">
+                        <option value="today 12-m">12 Bulan Terakhir</option>
+                        <option value="today 3-m">3 Bulan Terakhir</option>
+                        <option value="today 1-m">30 Hari Terakhir</option>
+                        <option value="now 7-d">7 Hari Terakhir</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-submit" id="btn-submit">
+                    <span id="btn-text">Analisis Tren</span>
+                    <i data-lucide="sparkles" id="btn-icon"></i>
+                    <div class="spinner" id="btn-spinner" style="display: none;"></div>
+                </button>
+            </form>
+        </section>
+
+        <!-- Warning Alert Banner for declining trends (Hidden by default) -->
+        <div id="warning-banner" class="alert-banner warning animate-slide-down" style="display: none;">
+            <i data-lucide="alert-triangle"></i>
+            <div class="alert-content">
+                <h3>Peringatan Tren Menurun (Fad Warning)</h3>
+                <p id="warning-text">Minat konsumen terhadap produk ini terpantau mengalami penurunan drastis. UMKM disarankan untuk tidak menginvestasikan modal besar atau mengubah lini bisnis utama untuk tren ini.</p>
+            </div>
+        </div>
+
+        <!-- Dashboard Analytics Grid -->
+        <div class="dashboard-grid">
+            
+            <!-- COLUMN 1: Visualizations (Line Graph & Regional table) -->
+            <div class="col-main">
+                <!-- Interest Over Time Chart -->
+                <div class="card chart-card animate-fade-in-up">
+                    <div class="card-header">
+                        <h2>
+                            <i data-lucide="line-chart"></i> Grafik Minat Penelusuran
+                        </h2>
+                        <span class="time-label" id="chart-time-label">12 Bulan Terakhir</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="interestChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Related Queries comparison cards -->
+                <div class="queries-grid animate-fade-in-up">
+                    <!-- Top Queries -->
+                    <div class="card queries-card">
+                        <div class="card-header">
+                            <h2>
+                                <i data-lucide="flame"></i> Kueri Terpopuler
+                            </h2>
+                            <span class="badge badge-top">Paling Konsisten</span>
+                        </div>
+                        <div class="table-wrapper">
+                            <table id="top-queries-table">
+                                <thead>
+                                    <tr>
+                                        <th>Kueri Penelusuran</th>
+                                        <th style="text-align: right;">Skor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                            <div class="empty-state" id="top-queries-empty" style="display: none;">Tidak ada kueri terkait terpopuler.</div>
+                        </div>
+                    </div>
+
+                    <!-- Rising Queries -->
+                    <div class="card queries-card">
+                        <div class="card-header">
+                            <h2>
+                                <i data-lucide="rocket"></i> Kueri Naik Daun
+                            </h2>
+                            <span class="badge badge-rising">Sedang Viral</span>
+                        </div>
+                        <div class="table-wrapper">
+                            <table id="rising-queries-table">
+                                <thead>
+                                    <tr>
+                                        <th>Kueri Penelusuran</th>
+                                        <th style="text-align: right;">Kenaikan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                            <div class="empty-state" id="rising-queries-empty" style="display: none;">Tidak ada kueri terkait naik daun.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMN 2: Sidebar (Consultant Insights & Region stats) -->
+            <div class="col-sidebar">
+                <!-- AI Culinary Business Consultant -->
+                <div class="card consultant-card highlight animate-fade-in-right">
+                    <div class="card-glow"></div>
+                    <div class="card-header">
+                        <div class="consultant-title">
+                            <i data-lucide="user-check" class="consultant-icon"></i>
+                            <div>
+                                <h2>Konsultan Kuliner Anda</h2>
+                                <p>Rekomendasi Berbasis Data</p>
+                            </div>
+                        </div>
+                        <span class="status-badge" id="trend-status-badge">STABLE</span>
+                    </div>
+
+                    <!-- Interactive Tabs Headers -->
+                    <div class="consultant-tabs">
+                        <button class="tab-btn active" data-tab="tab-recs">
+                            <i data-lucide="award"></i> Aksi
+                        </button>
+                        <button class="tab-btn" data-tab="tab-business">
+                            <i data-lucide="briefcase"></i> Bisnis
+                        </button>
+                        <button class="tab-btn" data-tab="tab-content">
+                            <i data-lucide="video"></i> Konten
+                        </button>
+                        <button class="tab-btn" data-tab="tab-marketing">
+                            <i data-lucide="megaphone"></i> Marketing
+                        </button>
+                    </div>
+
+                    <div class="consultant-body">
+                        <!-- Tab 1: Rekomendasi Aksi Utama -->
+                        <div class="tab-content active" id="tab-recs">
+                            <div class="insight-block">
+                                <h3><i data-lucide="file-text"></i> Ringkasan Analisis</h3>
+                                <p id="consultant-summary">Memuat analisis...</p>
+                            </div>
+                            
+                            <div class="insight-block">
+                                <h3><i data-lucide="globe"></i> Penetrasi Pasar Regional</h3>
+                                <p id="consultant-regional">Memuat wilayah...</p>
+                            </div>
+
+                            <div class="insight-block">
+                                <h3><i data-lucide="lightbulb" style="color: #ecc94b;"></i> 3 Aksi Cepat UMKM</h3>
+                                <ol class="recs-list" id="consultant-recs">
+                                    <!-- Dynamic list -->
+                                </ol>
+                            </div>
+                        </div>
+
+                        <!-- Tab 2: Strategi Bisnis -->
+                        <div class="tab-content" id="tab-business">
+                            <div class="insight-block">
+                                <h3><i data-lucide="trending-up"></i> Rekayasa Menu &amp; Operasional</h3>
+                                <ul class="recs-list bullet-list" id="consultant-business">
+                                    <!-- Dynamic list -->
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Tab 3: Ide Konten Sosmed -->
+                        <div class="tab-content" id="tab-content">
+                            <div class="insight-block">
+                                <h3><i data-lucide="clapperboard"></i> Viral Hook &amp; Konsep Video</h3>
+                                <ul class="recs-list bullet-list" id="consultant-content">
+                                    <!-- Dynamic list -->
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Tab 4: Digital Marketing -->
+                        <div class="tab-content" id="tab-marketing">
+                            <div class="insight-block">
+                                <h3><i data-lucide="target"></i> Iklan Lokal &amp; Promosi Kreatif</h3>
+                                <ul class="recs-list bullet-list" id="consultant-marketing">
+                                    <!-- Dynamic list -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interest by Region (Provinces) -->
+                <div class="card region-card animate-fade-in-right" id="region-card-wrapper">
+                    <div class="card-header">
+                        <h2>
+                            <i data-lucide="map"></i> Minat Provinsi Tertinggi
+                        </h2>
+                        <span class="badge">Terpopuler</span>
+                    </div>
+                    <div class="region-list-wrapper">
+                        <div id="region-list" class="region-bars">
+                            <!-- Dynamic items with progress bars -->
+                        </div>
+                        <div class="empty-state" id="region-empty" style="display: none;">Analisis regional hanya tersedia untuk tingkat nasional.</div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2026 <strong>Solusi Mitra UMKM</strong>. Dirancang khusus untuk kemajuan UMKM Kuliner Indonesia.</p>
+            <p class="source-info" id="api-source-info">Sumber Data: Google Trends API Scraper &amp; Analisis Heuristik</p>
+        </div>
+    </footer>
+
+    <!-- Custom JS -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
